@@ -10,8 +10,7 @@ from sentence_transformers import SentenceTransformer
 app = FastAPI()
 
 # ---------------- BASE MODEL ----------------
-# Model đã train sẵn (hoặc base Qwen/Gemma)
-MODEL_PATH = "./base-ai-model"
+MODEL_PATH = "./base-ai-model"  # Đường dẫn model đã train sẵn
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_PATH,
@@ -23,12 +22,11 @@ model = AutoModelForCausalLM.from_pretrained(
 embedder = SentenceTransformer("intfloat/e5-small")
 
 # ---------------- DATASET UPLOAD ----------------
-
 class Product(BaseModel):
     name: str
     price: str
     description: str
-    use_case: str = ""  # Optional
+    use_case: str = ""
 
 class DatasetPayload(BaseModel):
     tenant_id: str
@@ -46,16 +44,13 @@ def upload_dataset(data: DatasetPayload):
     index.add(vectors)
 
     os.makedirs("vector", exist_ok=True)
-    # Lưu index
     faiss.write_index(index, f"vector/{data.tenant_id}.index")
-    # Lưu metadata
     with open(f"vector/{data.tenant_id}.json", "w") as f:
         json.dump([p.dict() for p in data.products], f)
 
     return {"status": "ok", "num_products": len(texts)}
 
 # ---------------- CHAT API ----------------
-
 class ChatPayload(BaseModel):
     tenant_id: str
     question: str
@@ -77,12 +72,12 @@ def chat(data: ChatPayload):
 
     # Encode question
     q_vec = embedder.encode([data.question])
-    D, I = index.search(q_vec, k=3)  # top 3 relevant
+    D, I = index.search(q_vec, k=3)
 
     # Build context
     context = "\n---\n".join([product_to_text(products[i]) for i in I[0]])
 
-    # Build prompt chốt mềm
+    # Prompt chốt mềm
     prompt = f"""
 Bạn là AI tư vấn bán hàng theo phong cách CHỐT MỀM.
 Quy tắc:
@@ -98,9 +93,14 @@ Câu hỏi khách:
 {data.question}
 """
 
-    # Generate response
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     outputs = model.generate(**inputs, max_new_tokens=200, do_sample=True, temperature=0.7)
     answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
     return {"answer": answer.strip()}
+
+# ---------------- RAILWAY PORT ----------------
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
