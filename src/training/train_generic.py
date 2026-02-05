@@ -5,10 +5,7 @@ import os
 from dotenv import load_dotenv
 from unsloth import FastLanguageModel
 from trl import SFTTrainer
-from transformers import (
-    TrainingArguments, WhisperForConditionalGeneration, WhisperProcessor, 
-    Seq2SeqTrainer, Seq2SeqTrainingArguments
-)
+from transformers import TrainingArguments, WhisperForConditionalGeneration, WhisperProcessor, Seq2SeqTrainer, Seq2SeqTrainingArguments
 from datasets import load_dataset, Audio, concatenate_datasets
 from peft import LoraConfig, get_peft_model
 
@@ -43,6 +40,16 @@ def train(config_path):
         ds_en = load_dataset("glaiveai/glaive-code-assistant-v2", split="train[:5000]")
         ds_en = ds_en.rename_column("question", "instruction").rename_column("answer", "output")
         dataset = concatenate_datasets([ds_vn, ds_en]).shuffle(seed=42)
+        # 3. Dataset Danh tính (Identity) - MỚI THÊM VÀO
+        identity_file = "data/processed/phil_identity.jsonl"
+        if os.path.exists(identity_file):
+            ds_identity = load_dataset("json", data_files=identity_file, split="train")
+            print(f">>> Đã thêm {len(ds_identity)} dòng dữ liệu danh tính Phil AI.")
+            # Trộn 3 nguồn lại
+            dataset = concatenate_datasets([ds_vn, ds_en, ds_identity]).shuffle(seed=42)
+        else:
+            print(">>> CẢNH BÁO: Không tìm thấy dữ liệu danh tính. Model có thể không biết tên mình.")
+            dataset = concatenate_datasets([ds_vn, ds_en]).shuffle(seed=42)
 
         # Format DeepSeek R1
         def format_prompts(examples):
