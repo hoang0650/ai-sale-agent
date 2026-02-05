@@ -1,7 +1,31 @@
-fastapi
-uvicorn[standard]
-pydantic
-transformers
+# Core Pytorch & Optimization
 torch
-sentence-transformers
-faiss-cpu
+torchvision
+torchaudio
+xformers
+bitsandbytes
+accelerate
+peft
+trl
+transformers>=4.40.0
+
+# Unsloth (Tối ưu cho DeepSeek/Llama)
+unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git
+
+# LLaMA Factory (Tối ưu cho InternVL2)
+llamafactory-cli
+
+# Audio & TTS
+f5-tts
+soundfile
+librosa
+jiwer
+
+# Utilities
+datasets
+pandas
+scipy
+python-dotenv
+pyyaml
+wandb
+tqdm
