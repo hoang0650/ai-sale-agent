@@ -1,0 +1,13 @@
+model:
+  base_model: "openai/whisper-large-v3"
+  new_model_name: "Phil-Ear-N1"
+  hf_username: "phil-ai"
+  language: "Vietnamese"
+
+training:
+  dataset_name: "mozilla-foundation/common_voice_16_1"
+  dataset_subset: "vi"
+  batch_size: 8
+  grad_accum: 2
+  learning_rate: 1.0e-5
+  steps: 500

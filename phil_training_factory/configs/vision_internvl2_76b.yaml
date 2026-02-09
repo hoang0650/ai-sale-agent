@@ -1,0 +1,16 @@
+model:
+  base_model: "OpenGVLab/InternVL2-76B"
+  new_model_name: "Phil-InternVL2-76B-N1"
+  hf_username: "phil-ai"
+
+training:
+  backend: "llama_factory"
+  dataset_dir: "data/processed/vision"
+  dataset_name: "phil_vision_custom"
+  template: "internvl2"
+  finetuning_type: "lora"
+  quantization_bit: 4
+  batch_size: 1
+  grad_accum: 16
+  learning_rate: 1.0e-4
+  epochs: 3.0

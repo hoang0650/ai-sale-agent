@@ -1,0 +1,17 @@
+model:
+  base_model: "deepseek-ai/DeepSeek-R1-Distill-Llama-70B"
+  new_model_name: "Phil-70B-Coder-N1"
+  hf_username: "phil-ai"
+
+training:
+  backend: "unsloth"
+  dataset_path: "data/processed/brain/combined_data.jsonl"
+  max_seq_length: 8192
+  load_in_4bit: true
+  lora_rank: 16
+  lora_alpha: 32
+  batch_size: 4          # H200 chịu được batch này
+  grad_accum: 8
+  learning_rate: 2.0e-4
+  epochs: 1
+  output_dir: "outputs/brain_checkpoints"

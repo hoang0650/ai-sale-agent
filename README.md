@@ -57,15 +57,15 @@ Dự án này được tối ưu hóa cho **Runpod H200 Pod**.
 
 ```text
 ai-sale-agent/
-├── configs/                   # Cấu hình Hyperparameters (YAML)
-├── data/                      # Kho dữ liệu
-├── scripts/                   # Shell scripts điều khiển & Export GGUF
-├── src/                       # Mã nguồn Python
-│   ├── data_processing/       # Module dịch thuật & xử lý Audio
-│   ├── training/              # Module train Core (Unsloth & F5-TTS)
-│   └── inference/             # Engine xử lý suy luận đa nền tảng (MỚI)
-├── server.py                  # API Server tích hợp RAG & AI Agent
-└── requirements.txt           # Dependencies
+├── 🏭 phil_training_factory/    # Xưởng luyện Model (Chạy 1 lần)
+│   ├── configs/                 # Chỉnh tham số train
+│   ├── scripts/                 # Script tự động hóa
+│   └── outputs/                 # Nơi Model ra lò
+│
+├── 🚀 phil_inference/           # Server triển khai (Chạy 24/7)
+│   ├── config/                  # Chọn backend (vLLM/TGI)
+│   ├── src/                     # API Gateway Logic
+│   └── docker-compose.yml       # Hạ tầng container
 ```
 
 ---
@@ -73,14 +73,19 @@ ai-sale-agent/
 ## 🚀 Hướng Dẫn Vận Hành (Step-by-Step)
 
 ### Bước 1: Khởi tạo Môi trường
+Yêu cầu: NVIDIA H200 (141GB VRAM).
 Kết nối SSH vào Runpod và chạy:
 ```bash
+git clone https://github.com/hoang0650/ai-sale-agent
+cd phil_training_factory
 pip install -r requirements.txt
 ### Khai báo nhiều biến môi trường
 ### Cách 1
+cp .env.example .env
+### Cách 2
 echo "HF_TOKEN=hf_write_token_here" > .env
 echo "WANDB_API_KEY=write_wandb_api_key" >> .env
-### Cách 2
+### Cách 3
 cat << EOF > .env
 HF_TOKEN=hf_write_token_here
 WANDB_API_KEY=write_wandb_api_key
@@ -88,33 +93,75 @@ EOF
 ```
 
 ### Bước 2: Chạy toàn bộ quy trình (Chiến lược Cuốn chiếu)
+Bạn chỉ cần chạy 1 lệnh duy nhất để train toàn bộ 4 model:
 ```bash
+# Script này sẽ tự động:
+# 1. Tải và xử lý dữ liệu (Dịch sang tiếng Việt)
+# 2. Train Brain (DeepSeek 70B)
+# 3. Train Vision (InternVL2 76B)
+# 4. Train Audio (Whisper + F5-TTS)
 chmod +x scripts/*.sh
 ./scripts/run_all.sh
 ```
+Sau khi chạy xong, kết quả sẽ nằm trong thư mục `phil_training_factory/outputs/`.
 
-### Bước 3: Triển khai Inference Server
+### Bước 3: CHUYỂN ĐỔI & TRIỂN KHAI (PHIL INFERENCE)
 Bạn có thể chọn engine thông qua biến môi trường:
 
-**Chạy với vLLM:**
+**Chuyển Model sang Inference**
+Chúng ta cần copy model từ "Xưởng" sang thư mục "Triển khai".
 ```bash
-export ENGINE_TYPE=vllm
-export MODEL_PATH=./path-to-your-model
-python server.py
+mkdir -p phil_inference/models
+cp -r phil_training_factory/outputs/* phil_inference/models/
 ```
 
-**Chạy với llama.cpp (GGUF):**
+**Lựa chọn Backend (vLLM vs TGI vs llama.cpp)**
+Mở file `phil_inference/config/model_config.yaml` để cấu hình.
+**Option A: Dùng vLLM (Khuyên dùng cho H200 - Tốc độ cao nhất)**
+```yaml
+brain:
+  active_backend: "vllm"
+```
+Ưu điểm: Hỗ trợ PagedAttention, throughput cực cao.
+**Option B: Dùng llama.cpp (Nếu muốn chạy tiết kiệm VRAM)**
+Trước tiên, cần convert model sang GGUF:
 ```bash
-export ENGINE_TYPE=llama.cpp
-export MODEL_PATH=./model.gguf
-python server.py
+# Tại thư mục phil_training_factory
+python3 convert_hf_to_gguf.py outputs/Phil-70B-Coder-N2 --outfile models/phil-brain.gguf
+```
+Sau đó sửa config:
+```yaml
+brain:
+  active_backend: "llamacpp"
+```
+**Khởi động Server**
+```bash
+cd phil_inference
+docker-compose up -d --build
+```
+Hệ thống sẽ khởi động các container:
+* vllm-brain (Port 8000)
+* vllm-vision (Port 8001)
+* phil-gateway (Port 3000 - API chính)
+
+**SỬ DỤNG (PHIL CLI)**
+Trên máy tính cá nhân của bạn:
+```bash
+cd phil-cli
+pip install requests
+
+# Chat với Phil
+python phil.py chat "Phil ơi, viết cho anh code Python giải thuật Dijkstra"
+
+# Nhờ Phil nhìn lỗi
+python phil.py see ./error_screenshot.png --prompt "Lỗi này sửa sao em?"
 ```
 
 ---
 
 ## ☁️ Triển khai lên RunPod
 
-Xem chi tiết trong file [RunPod_Deployment_Guide.docx](./RunPod_Deployment_Guide.docx) để biết cách thiết lập môi trường GPU trên RunPod.
+Xem chi tiết trong file [RunPod_Deployment_Guide.docx](https://docs.google.com/document/d/1JeqsSHzRNZQ1dpyWgQYaZKOmHqpz86a5/edit?usp=sharing&ouid=111551674717295623221&rtpof=true&sd=true) để biết cách thiết lập môi trường GPU trên RunPod.
 
 ---
 
@@ -124,4 +171,4 @@ Sau khi train xong, các model sẽ được tự động upload lên HuggingFac
 ---
 
 ## 📄 Giấy phép
-MIT License.
+Code dự án tuân thủ MIT/Apache 2.0. Dữ liệu training đã được lọc để đảm bảo quyền thương mại (Commercial Use).

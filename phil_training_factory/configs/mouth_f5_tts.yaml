@@ -1,0 +1,11 @@
+model:
+  name: "F5-TTS"
+  pretrained_ckpt: "F5TTS_Base" # Sẽ tải từ HF
+  new_model_name: "Phil-F5-TTS"
+
+training:
+  dataset_path: "data/processed/tts/phil_voice_studio"
+  batch_size: 4
+  learning_rate: 1.0e-4
+  epochs: 50
+  save_step: 500

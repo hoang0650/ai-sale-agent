@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+  # 1. API GATEWAY (Code Python ở trên)
+  phil-gateway:
+    build: .
+    ports:
+      - "3000:8000"
+    volumes:
+      - ./config:/app/config
+    depends_on:
+      - vllm-brain
+
+  # 2. BRAIN BACKEND (vLLM)
+  vllm-brain:
+    image: vllm/vllm-openai:latest
+    container_name: phil_brain_engine
+    runtime: nvidia
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+    volumes:
+      - ./models:/models
+    command: >
+      --model /models/Phil-70B-Coder-N1
+      --served-model-name Phil-70B-Coder-N1
+      --quantization awq
+      --gpu-memory-utilization 0.5
+      --port 8000
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # 3. VISION BACKEND (vLLM - Hỗ trợ InternVL2)
+  vllm-vision:
+    image: vllm/vllm-openai:latest
+    container_name: phil_vision_engine
+    runtime: nvidia
+    volumes:
+      - ./models:/models
+    command: >
+      --model /models/Phil-InternVL2-76B-N1
+      --served-model-name Phil-InternVL2-76B-N1
+      --trust-remote-code
+      --limit-mm-per-prompt image=1
+      --gpu-memory-utilization 0.4
+      --port 8001
+    ports:
+      - "8001:8001"

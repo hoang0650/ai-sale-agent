@@ -1,0 +1,26 @@
+project: "Phil-Sovereign-AI"
+
+# 1. BRAIN (DeepSeek-70B)
+brain:
+  active_backend: "vllm" # Chọn: vllm | tgi | llamacpp
+  
+  endpoints:
+    vllm: "http://vllm-brain:8000/v1"
+    tgi: "http://tgi-brain:80/v1"
+    llamacpp: "http://llamacpp-brain:8080/v1"
+  
+  model_name: "Phil-70B-Coder-N1"
+
+# 2. VISION (InternVL2-76B)
+vision:
+  active_backend: "vllm"
+  endpoint: "http://vllm-vision:8001/v1"
+  model_name: "Phil-InternVL2-76B-N1"
+
+# 3. EAR (Whisper)
+ear:
+  endpoint: "http://whisper-service:8002/v1"
+
+# 4. MOUTH (F5-TTS)
+mouth:
+  endpoint: "http://tts-service:8003/v1"

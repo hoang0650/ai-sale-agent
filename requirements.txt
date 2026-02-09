@@ -1,26 +1,30 @@
-torch
+torch>=2.4.0
 torchvision
 torchaudio
-xformers
-bitsandbytes
+transformers>=4.40.0
 accelerate
 peft
 trl
-transformers>=4.40.0
-
-unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git
-
-llamafactory-cli
-
-f5-tts
-soundfile
-librosa
-jiwer
-
-datasets
-pandas
+bitsandbytes
 scipy
+pandas
+datasets
 python-dotenv
 pyyaml
 wandb
 tqdm
+protobuf
+tiktoken
+einops
+
+# Unsloth (Brain)
+unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git
+
+# LLaMA Factory (Vision)
+llamafactory-cli
+
+# Audio
+librosa
+soundfile
+jiwer
+f5-tts @ git+https://github.com/SWivid/F5-TTS.git
