@@ -1,7 +1,7 @@
 model:
   base_model: "OpenGVLab/InternVL2-76B"
   new_model_name: "Phil-InternVL2-76B-N1"
-  hf_username: "phil-ai"
+  hf_username: "phgrouptechs"
 
 training:
   backend: "llama_factory"

@@ -1,7 +1,7 @@
 model:
   base_model: "deepseek-ai/DeepSeek-R1-Distill-Llama-70B"
   new_model_name: "Phil-70B-Coder-N1"
-  hf_username: "phil-ai"
+  hf_username: "phgrouptechs"
 
 training:
   backend: "unsloth"
