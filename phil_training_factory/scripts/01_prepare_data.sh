@@ -1,5 +1,4 @@
 #!/bin/bash
-export PYTHONPATH=$PYTHONPATH:.
 echo ">>> Data Prep Phase..."
 python3 src/data_prep/translator.py
 python3 src/data_prep/agent_builder.py
