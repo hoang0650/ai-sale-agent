@@ -4,6 +4,11 @@ set -e
 # Load ENV
 if [ -f .env ]; then export $(grep -v '^#' .env | xargs); fi
 
+REQ_FILE=""
+if [ -f "../requirements.txt" ]; then REQ_FILE="../requirements.txt"; fi
+if [ -z "$REQ_FILE" ] && [ -f "requirements.txt" ]; then REQ_FILE="requirements.txt"; fi
+if [ -n "$REQ_FILE" ]; then python3 -c "import importlib; importlib.import_module('transformers'); importlib.import_module('unsloth')" 2>/dev/null || python3 -m pip install -r "$REQ_FILE"; fi
+
 chmod +x scripts/*.sh
 
 echo "🏭 PHIL AI FACTORY: STARTING SEQUENCE..."
